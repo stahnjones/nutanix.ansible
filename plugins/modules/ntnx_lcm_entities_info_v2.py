@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# Copyright: (c) 2025, Nutanix
+# Copyright: (c) 2021, Prem Karat
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 from __future__ import absolute_import, division, print_function
 
@@ -14,8 +14,7 @@ short_description: Fetch LCM Entities Info
 description:
     - This module fetches LCM Entities Info.
     - Fetch a particular LCM entity details using external ID.
-    - These are used to get the details/ext_id of the entities after performing LCM inventory.
-version_added: 2.1.0
+version_added: 2.0.0
 author:
     - Abhinav Bansal (@abhinavbansal29)
     - George Ghawali (@george-ghawali)
@@ -33,9 +32,9 @@ extends_documentation_fragment:
 EXAMPLES = r"""
 - name: Fetch LCM entity using external ID
   nutanix.ncp.ntnx_lcm_entities_info_v2:
-    nutanix_host: <pc_ip>
-    nutanix_username: <user>
-    nutanix_password: <pass>
+    nutanix_host: "{{ ip }}"
+    nutanix_username: "{{ username }}"
+    nutanix_password: "{{ password }}"
     ext_id: "3c196eac-e1d5-1b8a-9b01-c133f6907ca2"
   register: lcm_entity
 """
@@ -86,11 +85,6 @@ response:
             "target_version": "3.8.0",
             "tenant_id": null
         }
-ext_id:
-    description: The external ID of the entity
-    type: str
-    returned: always
-    sample: "3c196eac-e1d5-4c8a-9b01-c133f6907ca2"
 changed:
     description: Whether the module made any changes
     type: bool
@@ -98,9 +92,9 @@ changed:
     sample: false
 error:
     description: This field typically holds information about if the task have errors that occurred during the task execution
-    type: str
-    returned: When an error occurs
-    sample: "Failed to generate info spec for entities"
+    type: bool
+    returned: always
+    sample: false
 """
 
 import warnings  # noqa: E402
@@ -152,10 +146,7 @@ def get_entities(module, api_instance, result):
             msg="Api Exception raised while fetching LCM entities info",
         )
 
-    resp = strip_internal_attributes(resp.to_dict()).get("data")
-    if not resp:
-        resp = []
-    result["response"] = resp
+    result["response"] = strip_internal_attributes(resp.to_dict())
 
 
 def run_module():
@@ -167,6 +158,7 @@ def run_module():
     remove_param_with_none_value(module.params)
     result = {
         "changed": False,
+        "error": None,
         "response": None,
     }
 

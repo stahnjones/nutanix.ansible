@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# Copyright: (c) 2025, Nutanix
+# Copyright: (c) 2021, Prem Karat
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 from __future__ import absolute_import, division, print_function
 
@@ -10,24 +10,21 @@ __metaclass__ = type
 DOCUMENTATION = r"""
 ---
 module: ntnx_lcm_config_v2
-short_description: Update LCM Configuration
+short_description: Update LCM Configurations
 description:
     - This module updates LCM configurations.
-version_added: 2.1.0
+version_added: 2.0.0
 author:
     - Abhinav Bansal (@abhinavbansal29)
 options:
     cluster_ext_id:
         description:
             - The external ID of the cluster.
-            - It is used to update the LCM configuration on a particular cluster, it updates Prism Central's LCM configuration if nothing passed.
-            - If we give PE cluster's external ID, it will update PE cluster's LCM configuration.
-            - We can get the external ID of the cluster using ntnx_clusters_info_v2 module.
         type: str
         required: false
     url:
         description:
-            - URL of the LCM repository.
+            - The URL of the cluster.
         type: str
         required: false
     is_auto_inventory_enabled:
@@ -37,29 +34,25 @@ options:
         required: false
     auto_inventory_schedule:
         description:
-            - The scheduled time in "%H:%M" 24-hour format of the next inventory execution.
-            - Used when auto_inventory_enabled is set to True.
-            - The default schedule time is 03:00(AM).
+            - The schedule for auto inventory.
         type: str
         required: false
     connectivity_type:
         description:
-            - This field indicates whether LCM framework on the cluster is running in connected-site mode or darksite mode.
+            - The connectivity type.
         type: str
         choices: ["CONNECTED_SITE", "DARKSITE_DIRECT_UPLOAD", "DARKSITE_WEB_SERVER"]
         required: false
     is_https_enabled:
         description:
-            - Indicates if the LCM URL has HTTPS enabled.
+            - Whether HTTPS is enabled.
         type: bool
         required: false
-        default: false
     has_module_auto_upgrade_enabled:
         description:
-            - Indicates if LCM is enabled to auto-upgrade products.
+            - Whether module auto upgrade is enabled.
         type: bool
         required: false
-        default: false
 extends_documentation_fragment:
     - nutanix.ncp.ntnx_credentials
     - nutanix.ncp.ntnx_operations_v2
@@ -68,14 +61,14 @@ extends_documentation_fragment:
 EXAMPLES = r"""
 - name: Update config of LCM
   nutanix.ncp.ntnx_lcm_config_v2:
-    nutanix_host: <pc_ip>
-    nutanix_username: <user>
-    nutanix_password: <pass>
+    nutanix_host: "{{ ip }}"
+    nutanix_username: "{{ username }}"
+    nutanix_password: "{{ password }}"
     cluster_ext_id: "00061de6-4a87-6b06-185b-ac1f6b6f97e2"
     is_auto_inventory_enabled: true
     is_https_enabled: true
     has_module_auto_upgrade_enabled: false
-    url: "http://example.com"
+    url: "http://download.nutanix.com/lcm/3.0"
   register: lcm_config_update
 """
 
@@ -105,9 +98,14 @@ response:
                 "Prism Central"
             ],
             "tenant_id": null,
-            "url": "http://example.com",
+            "url": "http://download.nutanix.com/lcm/3.0",
             "version": "3.1.56788"
         }
+cluster_ext_id:
+    description: The external ID of the cluster
+    type: str
+    returned: always
+    sample: "00061de6-4a87-6b06-185b-ac1f6b6f97e2"
 changed:
     description: Whether the module made any changes
     type: bool
@@ -115,13 +113,8 @@ changed:
     sample: false
 error:
     description: This field typically holds information about if the task have errors that occurred during the task execution
-    type: str
-    returned: When an error occurs
-    sample: "Failed creating query parameters for updating lcm config"
-skipped:
-    description: Indicates if the operation was skipped.
     type: bool
-    returned: When the operation was skipped
+    returned: always
     sample: false
 """
 
@@ -170,6 +163,9 @@ def check_lcm_config_idempotency(old_spec, update_spec):
 
 def update_lcm_config(module, api_instance, result):
     cluster_ext_id = module.params.get("cluster_ext_id")
+    if cluster_ext_id:
+        result["cluster_ext_id"] = cluster_ext_id
+
     current_spec = get_lcm_config(module, api_instance, cluster_ext_id)
     etag_value = get_etag(current_spec)
     if not etag_value:
@@ -217,6 +213,7 @@ def run_module():
     remove_param_with_none_value(module.params)
     result = {
         "changed": False,
+        "error": None,
         "response": None,
     }
     api_instance = get_config_api_instance(module)

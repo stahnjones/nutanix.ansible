@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# Copyright: (c) 2025, Nutanix
+# Copyright: (c) 2021, Prem Karat
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 from __future__ import absolute_import, division, print_function
 
@@ -9,19 +9,17 @@ __metaclass__ = type
 
 DOCUMENTATION = r"""
 module: ntnx_lcm_status_info_v2
-short_description: Get the LCM framework status.
-description: Get the LCM framework status.
-version_added: "2.1.0"
+short_description: Fetch LCM Status
+description: Fetch LCM Status like current version, available version, etc.
+version_added: "2.0.0"
 author:
   - George Ghawali (@george-ghawali)
 options:
   cluster_ext_id:
     description:
-      - The external ID of the cluster.
-      - It is used to fetch the LCM status on a particular cluster, it gives Prism Central's LCM status if nothing passed.
-      - If we give PE cluster's external ID, it will give PE cluster's LCM status.
-      - We can get the external ID of the cluster using ntnx_clusters_info_v2 module.
+      - The external ID of the Nutanix PC Cluster.
     type: str
+    required: true
 extends_documentation_fragment:
   - nutanix.ncp.ntnx_credentials
   - nutanix.ncp.ntnx_info_v2
@@ -30,9 +28,9 @@ extends_documentation_fragment:
 EXAMPLES = r"""
 - name: Get LCM status
   nutanix.ncp.ntnx_lcm_status_info_v2:
-    nutanix_host: <pc_ip>
-    nutanix_username: <user>
-    nutanix_password: <pass>
+    nutanix_host: "{{ ip }}"
+    nutanix_username: "{{ username }}"
+    nutanix_password: "{{ password }}"
     cluster_ext_id: "00062e00-87eb-ef15-0000-00000000b71a"
   register: lcm_status
 """
@@ -41,7 +39,7 @@ RETURN = r"""
 response:
   description:
     - The response from the Nutanix PC LCM Status API.
-    - It contains details like the ongoing operations on the LCM.
+    - It contains details like current version, available version, etc.
   type: dict
   returned: always
   sample:
@@ -67,6 +65,11 @@ changed:
     type: bool
     returned: always
     sample: false
+error:
+    description:
+        - The error message if the module fails.
+    type: str
+    returned: always
 """
 
 import warnings  # noqa: E402
@@ -102,13 +105,14 @@ def run_module():
         argument_spec=get_module_spec(),
         supports_check_mode=False,
         mutually_exclusive=[
-            ("cluster_ext_id", "filter"),
+            ("ext_id", "filter"),
         ],
     )
 
     remove_param_with_none_value(module.params)
     result = {
         "changed": False,
+        "error": None,
         "response": None,
     }
 

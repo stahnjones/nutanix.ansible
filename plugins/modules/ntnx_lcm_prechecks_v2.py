@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# Copyright: (c) 2025, Nutanix
+# Copyright: (c) 2021, Prem Karat
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 from __future__ import absolute_import, division, print_function
 
@@ -13,19 +13,19 @@ module: ntnx_lcm_prechecks_v2
 short_description: Perform LCM Prechecks
 description:
     - This module allows you to perform LCM Prechecks.
-version_added: "2.1.0"
+version_added: "2.0.0"
 author:
  - George Ghawali (@george-ghawali)
  - Abhinav Bansal (@abhinavbansal29)
 options:
     management_server:
         description:
-            - Cluster management server configuration used while updating clusters with ESX or Hyper-V.
+            - Management server details.
         type: dict
         suboptions:
             hypervisor_type:
                 description:
-                    - Type of Hypervisor present in the cluster.
+                    - Hypervisor type.
                 type: str
                 required: true
                 choices:
@@ -49,19 +49,19 @@ options:
                 required: true
     entity_update_specs:
         description:
-            - List of entity update objects for getting recommendations.
+            - List of entity update specs.
         type: list
         elements: dict
         required: true
         suboptions:
             entity_uuid:
                 description:
-                    - LCM Entity UUID.
+                    - Entity UUID.
                 type: str
                 required: true
             to_version:
                 description:
-                    - Version to upgrade to.
+                    - To version.
                 type: str
                 required: true
     skipped_precheck_flags:
@@ -74,10 +74,8 @@ options:
     cluster_ext_id:
         description:
             - Cluster external ID.
-            - It is used to perform LCM prechecks on entities on a particular cluster, it performs LCM prechecks on Prism Central entities if nothing passed.
-            - If we give PE cluster's external ID, it will perform LCM prechecks on PE cluster entities.
-            - We can get the external ID of the cluster using ntnx_clusters_info_v2 module.
         type: str
+        required: true
 extends_documentation_fragment:
     - nutanix.ncp.ntnx_credentials
     - nutanix.ncp.ntnx_operations_v2
@@ -86,9 +84,9 @@ extends_documentation_fragment:
 EXAMPLES = r"""
 - name: Perform LCM prechecks
   nutanix.ncp.ntnx_lcm_prechecks_v2:
-    nutanix_host: <pc_ip>
-    nutanix_username: <user>
-    nutanix_password: <pass>
+    nutanix_host: "{{ ip }}"
+    nutanix_username: "{{ username }}"
+    nutanix_password: "{{ password }}"
     cluster_ext_id: "00061de6-4a87-6b06-185b-ac1f6b6f97e2"
     management_server:
       ip: "10.0.0.2"
@@ -152,9 +150,9 @@ changed:
   sample: true
 error:
   description: This field typically holds information about if the task have errors that occurred during the task execution
-  returned: When an error occurs
-  type: str
-  sample: "Failed generating create LCM prechecks Spec"
+  returned: always
+  type: bool
+  sample: false
 """
 
 import traceback  # noqa: E402
@@ -279,6 +277,7 @@ def run_module():
     remove_param_with_none_value(module.params)
     result = {
         "changed": False,
+        "error": None,
         "response": None,
         "task_ext_id": None,
     }

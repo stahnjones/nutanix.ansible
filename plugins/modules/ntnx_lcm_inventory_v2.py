@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# Copyright: (c) 2025, Nutanix
+# Copyright: (c) 2021, Prem Karat
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 from __future__ import absolute_import, division, print_function
 
@@ -14,16 +14,13 @@ short_description: Perform Inventory
 description:
     - This module performs inventory.
     - Perform inventory using cluster external ID.
-version_added: 2.1.0
+version_added: 2.0.0
 author:
     - Abhinav Bansal (@abhinavbansal29)
 options:
     cluster_ext_id:
         description:
             - The external ID of the cluster.
-            - It is used to perform inventory on a particular cluster, it performs inventory on Prism Central if nothing passed.
-            - If we give PE cluster's external ID, it will perform inventory on PE cluster.
-            - We can get the external ID of the cluster using ntnx_clusters_info_v2 module.
         type: str
         required: false
 extends_documentation_fragment:
@@ -34,9 +31,9 @@ extends_documentation_fragment:
 EXAMPLES = r"""
 - name: Perform inventory of LCM
   nutanix.ncp.ntnx_lcm_inventory_v2:
-    nutanix_host: <pc_ip>
-    nutanix_username: <user>
-    nutanix_password: <pass>
+    nutanix_host: "{{ ip }}"
+    nutanix_username: "{{ username }}"
+    nutanix_password: "{{ password }}"
     cluster_ext_id: "00062e00-87eb-ef15-0000-00000000b71a"
   register: lcm_inventory
 """
@@ -91,6 +88,11 @@ task_ext_id:
     sample: "00061de6-4a87-6b06-185b-ac1f6b6f97e2"
 changed:
     description: Whether the module made any changes
+    type: bool
+    returned: always
+    sample: false
+error:
+    description: This field typically holds information about if the task have errors that occurred during the task execution
     type: bool
     returned: always
     sample: false
@@ -149,6 +151,7 @@ def run_module():
     remove_param_with_none_value(module.params)
     result = {
         "changed": False,
+        "error": None,
         "response": None,
         "task_ext_id": None,
     }
