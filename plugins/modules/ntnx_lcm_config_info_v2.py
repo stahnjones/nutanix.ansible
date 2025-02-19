@@ -152,7 +152,6 @@ options:
         description:
             - The external ID of the cluster.
         type: str
-        required: true
 extends_documentation_fragment:
     - nutanix.ncp.ntnx_credentials
     - nutanix.ncp.ntnx_info_v2
