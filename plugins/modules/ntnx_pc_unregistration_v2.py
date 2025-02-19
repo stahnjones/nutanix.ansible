@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# Copyright: (c) 2025, Nutanix
+# Copyright: (c) 2021, Prem Karat
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 from __future__ import absolute_import, division, print_function
 
@@ -9,12 +9,10 @@ __metaclass__ = type
 
 DOCUMENTATION = r"""
 module: ntnx_pc_unregistration_v2
-short_description: Unregister a PC-PC setup connected using availability zone.
+short_description: Unregister a registered remote cluster from the local cluster.
 version_added: 2.1.0
 description:
-    - Unregister a PC-PC setup connected using availability zone.
-    - This module cannot be used to unregister PC-PE.
-    - This module uses PC v4 APIs based SDKs
+    - Unregister a registered remote cluster from the local cluster.
 options:
     wait:
         description:
@@ -23,12 +21,12 @@ options:
         required: False
     pc_ext_id:
         description:
-            - External ID of the current Prism Central (Primary).
+            - External ID of the local cluster.
         type: str
         required: True
     ext_id:
         description:
-            - External ID of the Availability Zone Prism Central (Secondary).
+            - External ID of the remote cluster.
         type: str
         required: True
 extends_documentation_fragment:
@@ -36,7 +34,6 @@ extends_documentation_fragment:
     - nutanix.ncp.ntnx_operations_v2
 author:
     - Abhinav Bansal (@abhinavbansal29)
-    - George Ghawali (@george-ghawali)
 """
 
 EXAMPLES = r"""
@@ -135,7 +132,7 @@ changed:
 error:
     description: Error message if any.
     type: str
-    returned: When an error occurs
+    returned: always
     sample: null
 """
 
@@ -195,7 +192,7 @@ def unregister_cluster(module, domain_manager_api, result):
     current_spec = get_pc_config(module, domain_manager_api, pc_ext_id)
     etag_value = get_etag(data=current_spec)
     if not etag_value:
-        module.fail_json(msg="Failed fetching etag to unregister.", **result)
+        module.fail_json(msg="Failed to get etag value for the PC", **result)
 
     resp = None
     try:
@@ -232,6 +229,7 @@ def run_module():
     remove_param_with_none_value(module.params)
     result = {
         "changed": False,
+        "error": None,
         "response": None,
         "ext_id": None,
     }

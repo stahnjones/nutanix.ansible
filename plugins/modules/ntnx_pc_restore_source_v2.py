@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# Copyright: (c) 2025, Nutanix
+# Copyright: (c) 2021, Prem Karat
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 from __future__ import absolute_import, division, print_function
 
@@ -14,8 +14,7 @@ version_added: 2.1.0
 description:
     - Creates or Deletes a restore source pointing to a cluster or object store to restore the domain manager.
     - The created restore source is intended to be deleted after use.
-    - If the restore source is not deleted, then it is auto-deleted after sometime.
-    - Please provide Prism Element IP address here in C(nutanix_host)
+    - If the restore source is not deleted using the deleteRestoreSource API, then it is auto-deleted after sometime.
 options:
     ext_id:
         description:
@@ -41,7 +40,7 @@ options:
     location:
         description:
             - Location of the backup target.
-            - For example, a cluster or an object store endpoint.
+            - For example, a cluster or an object store endpoint, such as AWS s3.
         type: dict
         required: false
         suboptions:
@@ -96,27 +95,11 @@ options:
                                 description: RPO interval in minutes at which the backup will be taken
                                 type: int
                                 required: true
-    nutanix_host:
-        description:
-            - The Nutanix Prism Element IP address.
-        required: true
-        type: str
-    nutanix_username:
-        description:
-            - The username to authenticate with the Nutanix Prism Element.
-        required: true
-        type: str
-    nutanix_password:
-        description:
-            - The password to authenticate with the Nutanix Prism Element.
-        required: true
-        type: str
 extends_documentation_fragment:
     - nutanix.ncp.ntnx_credentials
     - nutanix.ncp.ntnx_operations_v2
 author:
     - Abhinav Bansal (@abhinavbansal29)
-    - George Ghawali (@george-ghawali)
 """
 
 EXAMPLES = r"""
@@ -190,8 +173,8 @@ changed:
 
 error:
     description: This field typically holds information about if the task have errors that occurred during the task execution
-    returned: When an error occurs
-    type: str
+    returned: always
+    type: bool
     sample: false
 
 failed:
@@ -323,6 +306,7 @@ def run_module():
     remove_param_with_none_value(module.params)
     result = {
         "changed": False,
+        "error": None,
         "response": None,
         "ext_id": None,
     }

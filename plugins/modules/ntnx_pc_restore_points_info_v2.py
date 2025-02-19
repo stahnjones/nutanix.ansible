@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# Copyright: (c) 2025, Nutanix
+# Copyright: (c) 2021, Prem Karat
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 from __future__ import absolute_import, division, print_function
 
@@ -13,7 +13,6 @@ version_added: 2.1.0
 description:
     - Fetch specific restore point info for a given restore source.
     - Fetch list of multiple restore points for a given restore source.
-    - Please provide Prism Element IP address here in C(nutanix_host)
 options:
     restore_source_ext_id:
         description:
@@ -22,34 +21,18 @@ options:
         type: str
     restorable_domain_manager_ext_id:
         description:
-            - External ID of the restorable domain manager(PC).
+            - External ID of the restorable domain manager.
         required: true
         type: str
     ext_id:
         description:
             - External ID of the restore point.
         type: str
-    nutanix_host:
-        description:
-            - The Nutanix Prism Element IP address.
-        required: true
-        type: str
-    nutanix_username:
-        description:
-            - The username to authenticate with the Nutanix Prism Element.
-        required: true
-        type: str
-    nutanix_password:
-        description:
-            - The password to authenticate with the Nutanix Prism Element.
-        required: true
-        type: str
 extends_documentation_fragment:
     - nutanix.ncp.ntnx_credentials
     - nutanix.ncp.ntnx_info_v2
 author:
     - Abhinav Bansal (@abhinavbansal29)
-    - George Ghawali (@george-ghawali)
 """
 
 EXAMPLES = r"""
@@ -124,8 +107,8 @@ changed:
 
 error:
     description: This field typically holds information about if the task have errors that occurred during the task execution
-    returned: When an error occurs
-    type: str
+    returned: always
+    type: bool
     sample: false
 
 failed:
@@ -176,7 +159,7 @@ def get_restore_points(module, domain_manager_backups_api, result):
         resp = domain_manager_backups_api.list_restore_points(
             restoreSourceExtId=restore_source_ext_id,
             restorableDomainManagerExtId=restorable_domain_manager_ext_id,
-            **kwargs  # fmt: skip
+            **kwargs,
         )
     except Exception as e:
         raise_api_exception(
@@ -185,10 +168,7 @@ def get_restore_points(module, domain_manager_backups_api, result):
             msg="Api Exception raised while fetching restore points info",
         )
 
-    resp = strip_internal_attributes(resp.to_dict()).get("data")
-    if not resp:
-        resp = []
-    result["response"] = resp
+    result["response"] = strip_internal_attributes(resp.to_dict()).get("data")
 
 
 def get_restore_points_with_ext_id(module, domain_manager_backups_api, result):
@@ -217,7 +197,7 @@ def run_module():
         ],
     )
     remove_param_with_none_value(module.params)
-    result = {"changed": False, "response": None}
+    result = {"changed": False, "error": None, "response": None}
     domain_manager_backups_api = get_domain_manager_backup_api_instance(module)
     if module.params.get("ext_id"):
         get_restore_points_with_ext_id(module, domain_manager_backups_api, result)

@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# Copyright: (c) 2025, Nutanix
+# Copyright: (c) 2021, Prem Karat
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 from __future__ import absolute_import, division, print_function
 
@@ -10,29 +10,11 @@ DOCUMENTATION = r"""
 module: ntnx_pc_restorable_domain_managers_info_v2
 short_description: Fetch restorable domain managers info
 version_added: 2.1.0
-description:
-    - Fetch list of multiple restorable domain managers for a given restore source.
-    - Please provide Prism Element IP address here in C(nutanix_host)
-    - Lists all the domain managers backed up at the object store/cluster.
+description: Fetch list of multiple restorable domain managers for a given restore source.
 options:
     restore_source_ext_id:
         description:
             - External ID of the restore source.
-        required: true
-        type: str
-    nutanix_host:
-        description:
-            - The Nutanix Prism Element IP address.
-        required: true
-        type: str
-    nutanix_username:
-        description:
-            - The username to authenticate with the Nutanix Prism Element.
-        required: true
-        type: str
-    nutanix_password:
-        description:
-            - The password to authenticate with the Nutanix Prism Element.
         required: true
         type: str
 extends_documentation_fragment:
@@ -40,7 +22,6 @@ extends_documentation_fragment:
     - nutanix.ncp.ntnx_info_v2
 author:
     - Abhinav Bansal (@abhinavbansal29)
-    - George Ghawali (@george-ghawali)
 """
 
 EXAMPLES = r"""
@@ -94,12 +75,6 @@ response:
             }
         ]
 
-total_available_results:
-    description: Total number of restorable domain managers available.
-    returned: always
-    type: int
-    sample: 1
-
 changed:
     description: This indicates whether the task resulted in any changes
     returned: always
@@ -108,8 +83,8 @@ changed:
 
 error:
     description: This field typically holds information about if the task have errors that occurred during the task execution
-    returned: When an error occurs
-    type: str
+    returned: always
+    type: bool
     sample: false
 
 failed:
@@ -161,22 +136,19 @@ def get_restorable_domain_managers(module, domain_manager_backups_api, result):
             msg="Api Exception raised while fetching restorable domain managers info",
         )
 
-    total_available_results = resp.metadata.total_available_results
-    result["total_available_results"] = total_available_results
-
-    resp = strip_internal_attributes(resp.to_dict()).get("data")
-    if not resp:
-        resp = []
-    result["response"] = resp
+    result["response"] = strip_internal_attributes(resp.to_dict()).get("data")
 
 
 def run_module():
     module = BaseInfoModule(
         argument_spec=get_module_spec(),
         supports_check_mode=False,
+        mutually_exclusive=[
+            ("restore_source_ext_id", "filter"),
+        ],
     )
     remove_param_with_none_value(module.params)
-    result = {"changed": False, "response": None}
+    result = {"changed": False, "error": None, "response": None}
     domain_manager_backups_api = get_domain_manager_backup_api_instance(module)
     get_restorable_domain_managers(module, domain_manager_backups_api, result)
     module.exit_json(**result)

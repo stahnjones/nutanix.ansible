@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# Copyright: (c) 2025, Nutanix
+# Copyright: (c) 2021, Prem Karat
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 from __future__ import absolute_import, division, print_function
 
@@ -9,12 +9,11 @@ __metaclass__ = type
 
 DOCUMENTATION = r"""
 module: ntnx_pc_restore_v2
-short_description: Restores a domain manager(PC) from a cluster or object store backup location based on the selected restore point.
+short_description: Restores a domain manager from a cluster or object store backup location.
 version_added: 2.1.0
 description:
     - The restore domain manager is a task-driven operation to restore a domain manager
         from a cluster or object store backup location based on the selected restore point.
-    - Please provide Prism Element IP address here in C(nutanix_host)
 options:
     ext_id:
         description:
@@ -27,7 +26,7 @@ options:
         type: bool
         required: False
     restore_source_ext_id:
-        description: Restore source external ID from which restore point will be used for restoring prism central
+        description: A unique identifier obtained from the restore source API that corresponds to the details provided for the restore source.
         type: str
         required: True
     restorable_domain_manager_ext_id:
@@ -572,27 +571,12 @@ options:
                 type: bool
                 required: false
                 default: false
-    nutanix_host:
-        description:
-            - The IP address of the Nutanix Prism Element.
-        required: true
-        type: str
-    nutanix_username:
-        description:
-            - The username to authenticate with the Nutanix Prism Element.
-        required: true
-        type: str
-    nutanix_password:
-        description:
-            - The password to authenticate with the Nutanix Prism Element.
-        required: true
-        type: str
 extends_documentation_fragment:
     - nutanix.ncp.ntnx_credentials
     - nutanix.ncp.ntnx_operations_v2
 author:
+    - Prem Karat (@premkarat)
     - Abhinav Bansal (@abhinavbansal29)
-    - George Ghawali (@george-ghawali)
 """
 
 EXAMPLES = r"""
@@ -627,13 +611,13 @@ EXAMPLES = r"""
               value: "10.0.0.6"
         ntp_servers:
           - fqdn:
-              value: "1.example.org"
+              value: "1.centos.pool.ntp.org"
           - fqdn:
-              value: "2.example.org"
+              value: "2.centos.pool.ntp.org"
           - fqdn:
-              value: "3.example.org"
+              value: "3.centos.pool.ntp.org"
           - fqdn:
-              value: "4.example.org"
+              value: "4.centos.pool.ntp.org"
         external_networks:
           - network_ext_id: "54678987-1764-3478-8050-ac1f6b6f97e2"
             default_gateway:
@@ -755,8 +739,8 @@ changed:
 
 error:
     description: This field typically holds information about if the task have errors that occurred during the task execution
-    returned: When an error occurs
-    type: str
+    returned: always
+    type: bool
     sample: false
 
 failed:
@@ -869,6 +853,7 @@ def run_module():
     remove_param_with_none_value(module.params)
     result = {
         "changed": False,
+        "error": None,
         "response": None,
         "ext_id": None,
     }

@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# Copyright: (c) 2025, Nutanix
+# Copyright: (c) 2021, Prem Karat
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 from __future__ import absolute_import, division, print_function
 
@@ -15,7 +15,6 @@ description:
     - Deploys a Prism Central using the provided details
     - Prism Central Size, Network Config are mandatory fields to deploy Prism Central
     - If wait is set to true, the module will wait for the task to complete
-    - Please provide Prism Element IP address here in C(nutanix_host)
 options:
     wait:
         description: Wait for the operation to complete.
@@ -551,24 +550,11 @@ options:
         type: bool
         required: false
         default: false
-    nutanix_host:
-        description: Nutanix Prism Element IP address.
-        type: str
-        required: true
-    nutanix_username:
-        description: The username to authenticate with the Nutanix Prism Element.
-        type: str
-        required: true
-    nutanix_password:
-        description: The password to authenticate with the Nutanix Prism Element.
-        type: str
-        required: true
 extends_documentation_fragment:
     - nutanix.ncp.ntnx_credentials
     - nutanix.ncp.ntnx_operations_v2
 author:
     - Abhinav Bansal (@abhinavbansal29)
-    - George Ghawali (@george-ghawali)
 """
 
 EXAMPLES = r"""
@@ -605,9 +591,9 @@ EXAMPLES = r"""
             value: "10.0.0.5"
       ntp_servers:
         - fqdn:
-            value: "2.example.org"
+            value: "2.centos.pool.ntp.org"
         - fqdn:
-            value: "3.example.org"
+            value: "3.centos.pool.ntp.org"
   register: result
 """
 
@@ -677,8 +663,9 @@ changed:
 
 error:
     description: This field typically holds information about if the task have errors that occurred during the task execution
-    returned: When an error occurs
-    type: str
+    returned: always
+    type: bool
+    sample: false
 
 failed:
     description: This field typically holds information about if the task have failed
@@ -774,6 +761,7 @@ def run_module():
     remove_param_with_none_value(module.params)
     result = {
         "changed": False,
+        "error": None,
         "response": None,
         "ext_id": None,
     }

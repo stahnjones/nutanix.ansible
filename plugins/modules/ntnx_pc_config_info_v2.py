@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# Copyright: (c) 2025, Nutanix
+# Copyright: (c) 2021, Prem Karat
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 from __future__ import absolute_import, division, print_function
 
@@ -12,23 +12,20 @@ short_description: Get PC Configuration info
 version_added: 2.1.0
 description:
     - Fetch specific PC Configuration info using external ID
-    - Fetch list of PC Configuration info if external ID is not provided with optional filters. Length of list is 1.
+    - Fetch list of multiple PC Configuration info if external ID is not provided with optional filters
 options:
     ext_id:
-        description:
-            - External ID of PC which is not the external ID of PCVM.
-            - To fetch specific PC Configuration info.
+        description: External ID to fetch specific PC Configuration info
         type: str
 extends_documentation_fragment:
     - nutanix.ncp.ntnx_credentials
     - nutanix.ncp.ntnx_info_v2
 author:
     - Abhinav Bansal (@abhinavbansal29)
-    - George Ghawali (@george-ghawali)
 """
 
 EXAMPLES = r"""
-- name: Get PC config without external ID
+- name: List all PCs
   nutanix.ncp.ntnx_pc_config_info_v2:
     nutanix_host: <pc_ip>
     nutanix_username: <user>
@@ -49,7 +46,7 @@ response:
     description:
         - Response for fetching PC Configuration info
         - PC Configuration info if external ID is provided
-        - One PC Configuration info if external ID is not provided as length of array is 1
+        - List of multiple PC Configuration info if external ID is not provided
     type: dict
     returned: always
     sample:
@@ -153,28 +150,28 @@ response:
                 "ntp_servers": [
                     {
                         "fqdn": {
-                            "value": "0.example.org"
+                            "value": "0.centos.pool.ntp.org"
                         },
                         "ipv4": null,
                         "ipv6": null
                     },
                     {
                         "fqdn": {
-                            "value": "3.example.org"
+                            "value": "3.centos.pool.ntp.org"
                         },
                         "ipv4": null,
                         "ipv6": null
                     },
                     {
                         "fqdn": {
-                            "value": "2.example.org"
+                            "value": "2.centos.pool.ntp.org"
                         },
                         "ipv4": null,
                         "ipv6": null
                     },
                     {
                         "fqdn": {
-                            "value": "1.example.org"
+                            "value": "1.centos.pool.ntp.org"
                         },
                         "ipv4": null,
                         "ipv6": null
@@ -202,8 +199,9 @@ changed:
 
 error:
     description: This field typically holds information about if the task have errors that occurred during the task execution
-    returned: When an error occurs
-    type: str
+    returned: always
+    type: bool
+    sample: false
 
 failed:
     description: This field typically holds information about if the task have failed
@@ -260,10 +258,7 @@ def get_pc_configs(module, domain_manager_api, result):
             exception=e,
             msg="Api Exception raised while fetching PC Configuration info",
         )
-    resp = strip_internal_attributes(resp.to_dict()).get("data")
-    if not resp:
-        resp = []
-    result["response"] = resp
+    result["response"] = strip_internal_attributes(resp.to_dict()).get("data")
 
 
 def run_module():
@@ -275,7 +270,7 @@ def run_module():
         ],
     )
     remove_param_with_none_value(module.params)
-    result = {"changed": False, "response": None}
+    result = {"changed": False, "error": None, "response": None}
     domain_manager_api = get_domain_manager_api_instance(module)
     if module.params.get("ext_id"):
         get_pc_config_with_ext_id(module, domain_manager_api, result)

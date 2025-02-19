@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# Copyright: (c) 2025, Nutanix
+# Copyright: (c) 2021, Prem Karat
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 from __future__ import absolute_import, division, print_function
 
@@ -12,22 +12,9 @@ short_description: Get PC restore source info
 version_added: 2.1.0
 description:
     - Fetch specific restore source info using external ID
-    - Please provide Prism Element IP address here in C(nutanix_host)
 options:
     ext_id:
         description: External ID to fetch specific restore source info
-        type: str
-        required: True
-    nutanix_host:
-        description: The Nutanix Prism Element IP address
-        type: str
-        required: True
-    nutanix_username:
-        description: The username to authenticate with the Nutanix Prism Element
-        type: str
-        required: True
-    nutanix_password:
-        description: The password to authenticate with the Nutanix Prism Element
         type: str
         required: True
 extends_documentation_fragment:
@@ -35,7 +22,6 @@ extends_documentation_fragment:
     - nutanix.ncp.ntnx_info_v2
 author:
     - Abhinav Bansal (@abhinavbansal29)
-    - George Ghawali (@george-ghawali)
 """
 
 EXAMPLES = r"""
@@ -81,8 +67,8 @@ changed:
 
 error:
     description: This field typically holds information about if the task have errors that occurred during the task execution
-    returned: When an error occurs
-    type: str
+    returned: always
+    type: bool
     sample: false
 
 failed:
@@ -124,9 +110,10 @@ def run_module():
         supports_check_mode=False,
     )
     remove_param_with_none_value(module.params)
-    result = {"changed": False, "response": None}
+    result = {"changed": False, "error": None, "response": None}
     prism = get_domain_manager_backup_api_instance(module)
-    get_restore_source_with_ext_id(module, prism, result)
+    if module.params.get("ext_id"):
+        get_restore_source_with_ext_id(module, prism, result)
 
     module.exit_json(**result)
 
