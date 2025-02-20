@@ -204,8 +204,7 @@ changed:
 error:
     description: This field typically holds information about if the task have errors that occurred during the task execution
     type: str
-    returned: always
-    sample: false
+    returned: When an error occurs
 """
 
 import warnings  # noqa: E402
@@ -244,7 +243,6 @@ def run_module():
     remove_param_with_none_value(module.params)
     result = {
         "changed": False,
-        "error": None,
         "response": None,
     }
 
