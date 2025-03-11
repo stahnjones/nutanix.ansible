@@ -12,7 +12,6 @@ DOCUMENTATION = r"""
 ---
 module: ntnx_protection_policies_v2
 short_description: Create, Update, Delete protection policy in Nutanix Prism Central
-version_added: 2.1.0
 description:
   - This module allows you to create, update, and delete protection policy in Nutanix Prism Central.
   - This module uses PC v4 APIs based SDKs
@@ -61,8 +60,8 @@ options:
       domain_manager_ext_id:
         description:
           - External ID of the PC
-          - Domain manager external ID can be fetched using this module ntnx_pc_config_info_v2
-          - Using ntnx_clusters_info_v2, you can list all clusters and get the one with clusterFunctionType as 'PRISM_CENTRAL'
+          - It can be fetched using ntnx_clusters_info_v2 module
+          - To fetch it, use the following filter: C(config/clusterFunction/any(t:t eq Clustermgmt.Config.ClusterFunctionRef'PRISM_CENTRAL')
         type: str
         required: true
       replication_sub_location:
@@ -114,7 +113,7 @@ options:
         description:
           - Specifies the schedule of the replication.
         type: dict
-        required: false
+        required: true
         suboptions:
           recovery_point_type:
             description:

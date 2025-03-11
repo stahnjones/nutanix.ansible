@@ -12,12 +12,11 @@ DOCUMENTATION = r"""
 ---
 module: ntnx_restore_protected_resources_v2
 short_description: Module to restore a protected resource in Nutanix Prism Central.
-version_added: 2.1.0
 description:
   - This module can be used to restore a protected resource in Nutanix Prism Central.
   - Supported only for protected resources that have minutely scheduled protection policies.
   - Restore VM/VG will create new VM/VG in the secondary PC (PC) for the given VM/VG external ID
-  - Restore VM/VG uses secondary PC IP and its credentials in C(nutanix_host), C(nutanix_username), C(nutanix_password).
+  Restore VM/VG uses secondary PC IP and its credentials in C(nutanix_host), C(nutanix_username), C(nutanix_password).
   - You can provide restore time to restore the VM/VG to a specific point in time
 options:
   ext_id:
