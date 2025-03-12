@@ -575,9 +575,9 @@
 
 #############################################################
 # Get all restorable domain managers
-# Get restorable domain manager using filter
+# Get restorable domain manager external ID
 # List all restore points
-# Get restore point details using external ID
+# Set restore point external ID
 
 - name: Get all restorable domain managers
   nutanix.ncp.ntnx_pc_restorable_domain_managers_info_v2:
@@ -586,28 +586,15 @@
   register: result
   ignore_errors: true
 
-- name: Get all restorable domain managers status
-  ansible.builtin.assert:
-    that:
-      - result.response is defined
-      - result.response | length > 0
-    fail_msg: "Get all restorable domain managers failed"
-    success_msg: "Get all restorable domain managers passed"
-
-- name: Get restorable domain manager using filter
-  nutanix.ncp.ntnx_pc_restorable_domain_managers_info_v2:
-    nutanix_host: "{{ ip_pe }}"
-    restore_source_ext_id: "{{ restore_source_object_store_ext_id }}"
-    filter: extId eq {{ domain_manager_ext_id }}
-  register: domain_manager_details
-  ignore_errors: true
+- name: Get restorable domain manager external ID
+  ansible.builtin.set_fact:
+    domain_manager_details: "{{ result.response | selectattr('ext_id', 'equalto', domain_manager_ext_id) | list }}"
 
 - name: List all restore points
   nutanix.ncp.ntnx_pc_restore_points_info_v2:
     nutanix_host: "{{ ip_pe }}"
     restore_source_ext_id: "{{ restore_source_object_store_ext_id }}"
-    restorable_domain_manager_ext_id: "{{ domain_manager_details.response[0].ext_id }}"
-    orderby: creationTime desc
+    restorable_domain_manager_ext_id: "{{ domain_manager_details[0].ext_id }}"
   register: result
   ignore_errors: true
 
@@ -627,7 +614,7 @@
   nutanix.ncp.ntnx_pc_restore_points_info_v2:
     nutanix_host: "{{ ip_pe }}"
     restore_source_ext_id: "{{ restore_source_object_store_ext_id }}"
-    restorable_domain_manager_ext_id: "{{ domain_manager_details.response[0].ext_id }}"
+    restorable_domain_manager_ext_id: "{{ domain_manager_details[0].ext_id }}"
     ext_id: "{{ restore_point_ext_id }}"
   register: restore_point_details
   ignore_errors: true
@@ -641,25 +628,17 @@
       - restore_point_details.response.domain_manager.config.name == pc_details.response.config.name
       - restore_point_details.response.domain_manager.config.size == pc_details.response.config.size
       - restore_point_details.response.domain_manager.config.resource_config.container_ext_ids == pc_details.response.config.resource_config.container_ext_ids
-      - restore_point_details.response.domain_manager.config.resource_config.data_disk_size_bytes ==
-        pc_details.response.config.resource_config.data_disk_size_bytes
+      - restore_point_details.response.domain_manager.config.resource_config.data_disk_size_bytes == pc_details.response.config.resource_config.data_disk_size_bytes
       - restore_point_details.response.domain_manager.config.resource_config.memory_size_bytes == pc_details.response.config.resource_config.memory_size_bytes
       - restore_point_details.response.domain_manager.config.resource_config.num_vcpus == pc_details.response.config.resource_config.num_vcpus
       - restore_point_details.response.domain_manager.network.external_address.ipv4.value == pc_details.response.network.external_address.ipv4.value
-      - restore_point_details.response.domain_manager.network.external_networks[0].network_ext_id ==
-        pc_details.response.network.external_networks[0].network_ext_id
-      - restore_point_details.response.domain_manager.network.external_networks[0].default_gateway.ipv4.value ==
-        pc_details.response.network.external_networks[0].default_gateway.ipv4.value
-      - restore_point_details.response.domain_manager.network.external_networks[0].subnet_mask.ipv4.value ==
-        pc_details.response.network.external_networks[0].subnet_mask.ipv4.value
-      - restore_point_details.response.domain_manager.network.external_networks[0].ip_ranges[0].begin.ipv4.value ==
-        pc_details.response.network.external_networks[0].ip_ranges[0].begin.ipv4.value
-      - restore_point_details.response.domain_manager.network.external_networks[0].ip_ranges[0].end.ipv4.value ==
-        pc_details.response.network.external_networks[0].ip_ranges[0].end.ipv4.value
-      - pc_details.response.network.name_servers[0].ipv4.value in
-        restore_point_details.response.domain_manager.network.name_servers | map(attribute='ipv4.value')
-      - pc_details.response.network.name_servers[1].ipv4.value in
-        restore_point_details.response.domain_manager.network.name_servers | map(attribute='ipv4.value')
+      - restore_point_details.response.domain_manager.network.external_networks[0].network_ext_id == pc_details.response.network.external_networks[0].network_ext_id
+      - restore_point_details.response.domain_manager.network.external_networks[0].default_gateway.ipv4.value == pc_details.response.network.external_networks[0].default_gateway.ipv4.value
+      - restore_point_details.response.domain_manager.network.external_networks[0].subnet_mask.ipv4.value == pc_details.response.network.external_networks[0].subnet_mask.ipv4.value
+      - restore_point_details.response.domain_manager.network.external_networks[0].ip_ranges[0].begin.ipv4.value == pc_details.response.network.external_networks[0].ip_ranges[0].begin.ipv4.value
+      - restore_point_details.response.domain_manager.network.external_networks[0].ip_ranges[0].end.ipv4.value == pc_details.response.network.external_networks[0].ip_ranges[0].end.ipv4.value
+      - pc_details.response.network.name_servers[0].ipv4.value in restore_point_details.response.domain_manager.network.name_servers | map(attribute='ipv4.value')
+      - pc_details.response.network.name_servers[1].ipv4.value in restore_point_details.response.domain_manager.network.name_servers | map(attribute='ipv4.value')
       - pc_details.response.network.ntp_servers[0].fqdn.value in restore_point_details.response.domain_manager.network.ntp_servers | map(attribute='fqdn.value')
       - pc_details.response.network.ntp_servers[1].fqdn.value in restore_point_details.response.domain_manager.network.ntp_servers | map(attribute='fqdn.value')
       - pc_details.response.network.ntp_servers[2].fqdn.value in restore_point_details.response.domain_manager.network.ntp_servers | map(attribute='fqdn.value')
@@ -771,8 +750,8 @@
   nutanix.ncp.ntnx_pc_restore_v2:
     nutanix_host: "{{ ip_pe }}"
     ext_id: "{{ restore_point_ext_id }}"
-    restore_source_ext_id: "{{ restore_source_object_store_ext_id }}"
-    restorable_domain_manager_ext_id: "{{ domain_manager_details.response[0].ext_id }}"
+    restore_source_ext_id: "{{ restore_source_ext_id }}"
+    restorable_domain_manager_ext_id: "{{ domain_manager_details[0].ext_id }}"
     domain_manager:
       config:
         should_enable_lockdown_mode: false
